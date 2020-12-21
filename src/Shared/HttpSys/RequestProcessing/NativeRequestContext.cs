@@ -140,7 +140,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
 
         // These methods require the HTTP_REQUEST to still be pinned in its original location.
 
-        internal string GetVerb()
+        internal string? GetVerb()
         {
             var verb = NativeRequest->Verb;
             if (verb > HttpApiTypes.HTTP_VERB.HttpVerbUnknown && verb < HttpApiTypes.HTTP_VERB.HttpVerbMaximum)
@@ -156,7 +156,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             return null;
         }
 
-        internal string GetRawUrl()
+        internal string? GetRawUrl()
         {
             if (NativeRequest->pRawUrl != null && NativeRequest->RawUrlLength > 0)
             {
@@ -289,7 +289,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
         // These methods are for accessing the request structure after it has been unpinned. They need to adjust addresses
         // in case GC has moved the original object.
 
-        internal string GetKnownHeader(HttpSysRequestHeader header)
+        internal string? GetKnownHeader(HttpSysRequestHeader header)
         {
             if (_permanentlyPinned)
             {
@@ -306,10 +306,10 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             }
         }
 
-        private string GetKnowHeaderHelper(HttpSysRequestHeader header, long fixup, HttpApiTypes.HTTP_REQUEST* request)
+        private string? GetKnowHeaderHelper(HttpSysRequestHeader header, long fixup, HttpApiTypes.HTTP_REQUEST* request)
         {
             int headerIndex = (int)header;
-            string value = null;
+            string? value = null;
 
             HttpApiTypes.HTTP_KNOWN_HEADER* pKnownHeader = (&request->Headers.KnownHeaders) + headerIndex;
             // For known headers, when header value is empty, RawValueLength will be 0 and
@@ -373,17 +373,17 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             }
         }
 
-        internal SocketAddress GetRemoteEndPoint()
+        internal SocketAddress? GetRemoteEndPoint()
         {
             return GetEndPoint(localEndpoint: false);
         }
 
-        internal SocketAddress GetLocalEndPoint()
+        internal SocketAddress? GetLocalEndPoint()
         {
             return GetEndPoint(localEndpoint: true);
         }
 
-        private SocketAddress GetEndPoint(bool localEndpoint)
+        private SocketAddress? GetEndPoint(bool localEndpoint)
         {
             if (_permanentlyPinned)
             {
@@ -399,7 +399,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             }
         }
 
-        private SocketAddress GetEndPointHelper(bool localEndpoint, HttpApiTypes.HTTP_REQUEST* request, byte* pMemoryBlob)
+        private SocketAddress? GetEndPointHelper(bool localEndpoint, HttpApiTypes.HTTP_REQUEST* request, byte* pMemoryBlob)
         {
             var source = localEndpoint ? (byte*)request->Address.pLocalAddress : (byte*)request->Address.pRemoteAddress;
 
@@ -411,7 +411,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             return CopyOutAddress(address);
         }
 
-        private static SocketAddress CopyOutAddress(IntPtr address)
+        private static SocketAddress? CopyOutAddress(IntPtr address)
         {
             ushort addressFamily = *((ushort*)address);
             if (addressFamily == (ushort)AddressFamily.InterNetwork)
@@ -545,7 +545,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             return new ReadOnlyDictionary<int, ReadOnlyMemory<byte>>(info);
         }
 
-        internal X509Certificate2 GetClientCertificate()
+        internal X509Certificate2? GetClientCertificate()
         {
             if (_permanentlyPinned)
             {
@@ -562,7 +562,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
         }
 
         // Throws CryptographicException
-        private X509Certificate2 GetClientCertificate(IntPtr baseAddress, HttpApiTypes.HTTP_REQUEST_V2* nativeRequest)
+        private X509Certificate2? GetClientCertificate(IntPtr baseAddress, HttpApiTypes.HTTP_REQUEST_V2* nativeRequest)
         {
             var request = nativeRequest->Request;
             long fixup = (byte*)nativeRequest - (byte*)baseAddress;

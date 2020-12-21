@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -38,29 +39,29 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         private readonly IISServerOptions _options;
 
-        protected Streams _streams;
+        protected Streams _streams = default!;
 
         private volatile bool _hasResponseStarted;
 
         private int _statusCode;
-        private string _reasonPhrase;
+        private string? _reasonPhrase;
         // Used to synchronize callback registration and native method calls
         internal readonly object _contextLock = new object();
 
-        protected Stack<KeyValuePair<Func<object, Task>, object>> _onStarting;
-        protected Stack<KeyValuePair<Func<object, Task>, object>> _onCompleted;
+        protected Stack<KeyValuePair<Func<object, Task>, object>>? _onStarting;
+        protected Stack<KeyValuePair<Func<object, Task>, object>>? _onCompleted;
 
-        protected Exception _applicationException;
-        protected BadHttpRequestException _requestRejectedException;
+        protected Exception? _applicationException;
+        protected BadHttpRequestException? _requestRejectedException;
 
         private readonly MemoryPool<byte> _memoryPool;
         private readonly IISHttpServer _server;
 
         private readonly ILogger _logger;
 
-        private GCHandle _thisHandle;
-        protected Task _readBodyTask;
-        protected Task _writeBodyTask;
+        private GCHandle _thisHandle = default!;
+        protected Task? _readBodyTask;
+        protected Task? _writeBodyTask;
 
         private bool _wasUpgraded;
 
@@ -100,20 +101,20 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
         public string RawTarget { get; set; }
 
         public bool HasResponseStarted => _hasResponseStarted;
-        public IPAddress RemoteIpAddress { get; set; }
+        public IPAddress? RemoteIpAddress { get; set; }
         public int RemotePort { get; set; }
-        public IPAddress LocalIpAddress { get; set; }
+        public IPAddress? LocalIpAddress { get; set; }
         public int LocalPort { get; set; }
         public string RequestConnectionId { get; set; }
         public string TraceIdentifier { get; set; }
-        public ClaimsPrincipal User { get; set; }
-        internal WindowsPrincipal WindowsUser { get; set; }
+        public ClaimsPrincipal? User { get; set; }
+        internal WindowsPrincipal? WindowsUser { get; set; }
         internal bool RequestCanHaveBody { get; private set; }
         public Stream RequestBody { get; set; }
         public Stream ResponseBody { get; set; }
         public PipeWriter ResponsePipeWrapper { get; set; }
 
-        protected IAsyncIOEngine AsyncIO { get; set; }
+        protected IAsyncIOEngine? AsyncIO { get; set; }
 
         public IHeaderDictionary RequestHeaders { get; set; }
         public IHeaderDictionary ResponseHeaders { get; set; }
@@ -136,9 +137,9 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             {
                 _thisHandle = GCHandle.Alloc(this);
 
-                Method = GetVerb();
+                Method = GetVerb() ?? string.Empty;
 
-                RawTarget = GetRawUrl();
+                RawTarget = GetRawUrl() ?? string.Empty;
                 // TODO version is slow.
                 HttpVersion = GetVersion();
                 Scheme = SslStatus != SslStatus.Insecure ? Constants.HttpsScheme : Constants.HttpScheme;
@@ -157,7 +158,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                     // Path and pathbase are unescaped by RequestUriBuilder
                     // The UsePathBase middleware will modify the pathbase and path correctly
                     PathBase = string.Empty;
-                    Path = originalPath;
+                    Path = originalPath ?? string.Empty;
                 }
 
                 var cookedUrl = GetCookedUrl();
@@ -204,7 +205,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             NativeMethods.HttpSetManagedContext(_requestNativeHandle, (IntPtr)_thisHandle);
         }
 
-        private string GetOriginalPath()
+        private string? GetOriginalPath()
         {
             var rawUrlInBytes = GetRawUrlInBytes();
 
@@ -238,7 +239,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             }
         }
 
-        public string ReasonPhrase
+        public string? ReasonPhrase
         {
             get { return _reasonPhrase; }
             set
@@ -336,6 +337,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             _readBodyTask = ReadBody();
         }
 
+        [MemberNotNull(nameof(AsyncIO))]
         private void EnsureIOInitialized()
         {
             // If at this point request was not upgraded just start a normal IO engine
@@ -510,7 +512,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         protected async Task FireOnStarting()
         {
-            Stack<KeyValuePair<Func<object, Task>, object>> onStarting = null;
+            Stack<KeyValuePair<Func<object, Task>, object>>? onStarting = null;
             lock (_contextLock)
             {
                 onStarting = _onStarting;
@@ -534,7 +536,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         protected async Task FireOnCompleted()
         {
-            Stack<KeyValuePair<Func<object, Task>, object>> onCompleted = null;
+            Stack<KeyValuePair<Func<object, Task>, object>>? onCompleted = null;
             lock (_contextLock)
             {
                 onCompleted = _onCompleted;
@@ -599,7 +601,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         internal void OnAsyncCompletion(int hr, int bytes)
         {
-            AsyncIO.NotifyCompletion(hr, bytes);
+            AsyncIO!.NotifyCompletion(hr, bytes);
         }
 
         private bool disposedValue = false; // To detect redundant calls
@@ -619,7 +621,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 }
 
                 // Lock to prevent CancelRequestAbortedToken from attempting to cancel a disposed CTS.
-                CancellationTokenSource localAbortCts = null;
+                CancellationTokenSource? localAbortCts = null;
 
                 lock (_abortLock)
                 {
@@ -643,7 +645,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             throw new InvalidOperationException(CoreStrings.FormatParameterReadOnlyAfterResponseStarted(name));
         }
 
-        private WindowsPrincipal GetWindowsPrincipal()
+        private WindowsPrincipal? GetWindowsPrincipal()
         {
             NativeMethods.HttpGetAuthenticationInformation(_requestNativeHandle, out var authenticationType, out var token);
 
@@ -690,7 +692,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 // The handle implements IValueTaskSource
                 _requestNativeHandle.Dispose();
 
-                await new ValueTask<object>(_requestNativeHandle, _requestNativeHandle.Version);
+                await new ValueTask<object?>(_requestNativeHandle, _requestNativeHandle.Version);
 
                 // Dispose the context
                 Dispose();

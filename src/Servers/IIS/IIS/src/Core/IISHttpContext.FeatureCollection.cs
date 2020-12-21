@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         private int _featureRevision;
         private string _httpProtocolVersion;
-        private X509Certificate2 _certificate;
+        private X509Certificate2? _certificate;
 
         private List<KeyValuePair<Type, object>> MaybeExtra;
 
@@ -53,7 +53,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             _featureRevision++;
         }
 
-        private object ExtraFeatureGet(Type key)
+        private object? ExtraFeatureGet(Type key)
         {
             if (MaybeExtra == null)
             {
@@ -150,7 +150,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             set => StatusCode = value;
         }
 
-        string IHttpResponseFeature.ReasonPhrase
+        string? IHttpResponseFeature.ReasonPhrase
         {
             get => ReasonPhrase;
             set => ReasonPhrase = value;
@@ -226,7 +226,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             // calling flush twice at the same time.
             // awaiting the writeBodyTask guarantees the response has finished the final flush.
             _bodyOutput.Complete();
-            return _writeBodyTask;
+            return _writeBodyTask!;
         }
 
         private async Task CompleteResponseBodyAwaited(ValueTask completeAsyncTask)
@@ -239,7 +239,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             }
 
             _bodyOutput.Complete();
-            await _writeBodyTask;
+            await _writeBodyTask!;
         }
 
         private async Task CompleteInitializeResponseAwaited(Task initializeTask)
@@ -247,7 +247,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             await initializeTask;
 
             _bodyOutput.Complete();
-            await _writeBodyTask;
+            await _writeBodyTask!;
         }
 
         // Http/2 does not support the upgrade mechanic.
@@ -259,7 +259,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         int IFeatureCollection.Revision => _featureRevision;
 
-        ClaimsPrincipal IHttpAuthenticationFeature.User
+        ClaimsPrincipal? IHttpAuthenticationFeature.User
         {
             get => User;
             set => User = value;
@@ -358,12 +358,12 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             return _streams.Upgrade();
         }
 
-        Task<X509Certificate2> ITlsConnectionFeature.GetClientCertificateAsync(CancellationToken cancellationToken)
+        Task<X509Certificate2?> ITlsConnectionFeature.GetClientCertificateAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(((ITlsConnectionFeature)this).ClientCertificate);
         }
 
-        unsafe X509Certificate2 ITlsConnectionFeature.ClientCertificate
+        unsafe X509Certificate2? ITlsConnectionFeature.ClientCertificate
         {
             get
             {
@@ -422,7 +422,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             }
         }
 
-        internal IHttpResponseTrailersFeature GetResponseTrailersFeature()
+        internal IHttpResponseTrailersFeature? GetResponseTrailersFeature()
         {
             // Check version is above 2.
             if (HttpVersion >= System.Net.HttpVersion.Version20 && NativeMethods.HttpSupportTrailer(_requestNativeHandle))
@@ -439,7 +439,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             set => ResponseTrailers = value;
         }
 
-        internal IHttpResetFeature GetResetFeature()
+        internal IHttpResetFeature? GetResetFeature()
         {
             // Check version is above 2.
             if (HttpVersion >= System.Net.HttpVersion.Version20 && NativeMethods.HttpSupportTrailer(_requestNativeHandle))

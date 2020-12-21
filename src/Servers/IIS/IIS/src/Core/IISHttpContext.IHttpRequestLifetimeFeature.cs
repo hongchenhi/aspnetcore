@@ -9,7 +9,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 {
     internal partial class IISHttpContext : IHttpRequestLifetimeFeature
     {
-        private CancellationTokenSource _abortedCts;
+        private CancellationTokenSource? _abortedCts;
         private CancellationToken? _manuallySetRequestAbortToken;
         private object _abortLock = new object();
         protected volatile bool _requestAborted;

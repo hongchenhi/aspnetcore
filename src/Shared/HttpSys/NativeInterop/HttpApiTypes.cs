@@ -385,7 +385,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             HttpVerbMaximum = 20,
         }
 
-        internal static readonly string[] HttpVerbs = new string[]
+        internal static readonly string?[] HttpVerbs = new string?[]
         {
                 null,
                 "Unknown",

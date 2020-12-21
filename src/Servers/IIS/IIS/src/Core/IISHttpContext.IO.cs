@@ -99,7 +99,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         private async Task ReadBody()
         {
-            Exception error = null;
+            Exception? error = null;
             try
             {
                 while (true)
@@ -152,7 +152,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         private async Task WriteBody(bool flush = false)
         {
-            Exception error = null;
+            Exception? error = null;
             try
             {
                 while (true)
@@ -252,7 +252,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 {
                     try
                     {
-                        CancellationTokenSource localAbortCts = null;
+                        CancellationTokenSource? localAbortCts = null;
 
                         lock (ctx._abortLock)
                         {
