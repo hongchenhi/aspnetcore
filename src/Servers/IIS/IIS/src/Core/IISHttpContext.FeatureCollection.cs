@@ -41,10 +41,10 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
         // then the list of `implementedFeatures` in the generated code project MUST also be updated.
 
         private int _featureRevision;
-        private string _httpProtocolVersion;
+        private string? _httpProtocolVersion;
         private X509Certificate2? _certificate;
 
-        private List<KeyValuePair<Type, object>> MaybeExtra;
+        private List<KeyValuePair<Type, object>>? MaybeExtra;
 
         public void ResetFeatureCollection()
         {
@@ -265,7 +265,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             set => User = value;
         }
 
-        string IServerVariablesFeature.this[string variableName]
+        string? IServerVariablesFeature.this[string variableName]
         {
             get
             {
@@ -290,23 +290,23 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 // Synchronize access to native methods that might run in parallel with IO loops
                 lock (_contextLock)
                 {
-                    NativeMethods.HttpSetServerVariable(_requestNativeHandle, variableName, value);
+                    NativeMethods.HttpSetServerVariable(_requestNativeHandle, variableName, value!); // TODO: What happens if you set a null server variable value?
                 }
             }
         }
 
-        object IFeatureCollection.this[Type key]
+        object? IFeatureCollection.this[Type key]
         {
             get => FastFeatureGet(key);
             set => FastFeatureSet(key, value);
         }
 
-        TFeature IFeatureCollection.Get<TFeature>()
+        TFeature? IFeatureCollection.Get<TFeature>() where TFeature : default
         {
-            return (TFeature)FastFeatureGet(typeof(TFeature));
+            return (TFeature?)FastFeatureGet(typeof(TFeature));
         }
 
-        void IFeatureCollection.Set<TFeature>(TFeature instance)
+        void IFeatureCollection.Set<TFeature>(TFeature? instance) where TFeature : default
         {
             FastFeatureSet(typeof(TFeature), instance);
         }

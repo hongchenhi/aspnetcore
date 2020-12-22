@@ -38,7 +38,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
         }
 
         ///<inheritdoc/>
-        public Task ChallengeAsync(AuthenticationProperties properties)
+        public Task ChallengeAsync(AuthenticationProperties? properties)
         {
             Debug.Assert(_context != null, "Handler must be initialized.");
 
@@ -48,7 +48,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
         }
 
         ///<inheritdoc/>
-        public Task ForbidAsync(AuthenticationProperties properties)
+        public Task ForbidAsync(AuthenticationProperties? properties)
         {
             Debug.Assert(_context != null, "Handler must be initialized.");
 

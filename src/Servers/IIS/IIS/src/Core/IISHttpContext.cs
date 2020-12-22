@@ -65,10 +65,10 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         private bool _wasUpgraded;
 
-        protected Pipe _bodyInputPipe;
-        protected OutputProducer _bodyOutput;
+        protected Pipe? _bodyInputPipe;
+        protected OutputProducer _bodyOutput = default!;
 
-        private HeaderCollection _trailers;
+        private HeaderCollection? _trailers;
 
         private const string NtlmString = "NTLM";
         private const string NegotiateString = "Negotiate";
@@ -92,34 +92,34 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             ((IHttpBodyControlFeature)this).AllowSynchronousIO = _options.AllowSynchronousIO;
         }
 
-        public Version HttpVersion { get; set; }
-        public string Scheme { get; set; }
-        public string Method { get; set; }
-        public string PathBase { get; set; }
-        public string Path { get; set; }
-        public string QueryString { get; set; }
-        public string RawTarget { get; set; }
+        public Version HttpVersion { get; set; } = default!;
+        public string Scheme { get; set; } = default!;
+        public string Method { get; set; } = default!;
+        public string PathBase { get; set; } = default!;
+        public string Path { get; set; } = default!;
+        public string QueryString { get; set; } = default!;
+        public string RawTarget { get; set; } = default!;
 
         public bool HasResponseStarted => _hasResponseStarted;
         public IPAddress? RemoteIpAddress { get; set; }
         public int RemotePort { get; set; }
         public IPAddress? LocalIpAddress { get; set; }
         public int LocalPort { get; set; }
-        public string RequestConnectionId { get; set; }
-        public string TraceIdentifier { get; set; }
+        public string? RequestConnectionId { get; set; }
+        public string? TraceIdentifier { get; set; }
         public ClaimsPrincipal? User { get; set; }
         internal WindowsPrincipal? WindowsUser { get; set; }
         internal bool RequestCanHaveBody { get; private set; }
-        public Stream RequestBody { get; set; }
-        public Stream ResponseBody { get; set; }
-        public PipeWriter ResponsePipeWrapper { get; set; }
+        public Stream RequestBody { get; set; } = default!;
+        public Stream ResponseBody { get; set; } = default!;
+        public PipeWriter? ResponsePipeWrapper { get; set; }
 
         protected IAsyncIOEngine? AsyncIO { get; set; }
 
-        public IHeaderDictionary RequestHeaders { get; set; }
-        public IHeaderDictionary ResponseHeaders { get; set; }
-        public IHeaderDictionary ResponseTrailers { get; set; }
-        private HeaderCollection HttpResponseHeaders { get; set; }
+        public IHeaderDictionary RequestHeaders { get; set; } = default!;
+        public IHeaderDictionary ResponseHeaders { get; set; } = default!;
+        public IHeaderDictionary? ResponseTrailers { get; set; }
+        private HeaderCollection HttpResponseHeaders { get; set; } = default!;
         private HeaderCollection HttpResponseTrailers => _trailers ??= new HeaderCollection(checkTrailers: true);
         internal bool HasTrailers => _trailers?.Count > 0;
 
@@ -552,7 +552,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                     }
                     catch (Exception ex)
                     {
-                        Log.ApplicationError(_logger, ((IHttpConnectionFeature)this).ConnectionId, TraceIdentifier, ex);
+                        Log.ApplicationError(_logger, ((IHttpConnectionFeature)this).ConnectionId, TraceIdentifier!, ex); // TODO: Can TraceIdentifier be null?
                     }
                 }
             }
@@ -560,7 +560,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
 
         public void SetBadRequestState(BadHttpRequestException ex)
         {
-            Log.ConnectionBadRequest(_logger, RequestConnectionId, ex);
+            Log.ConnectionBadRequest(_logger, RequestConnectionId!, ex); // TODO: Can RequestConnectionId be null?
 
             if (!HasResponseStarted)
             {
@@ -590,7 +590,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 _applicationException = new AggregateException(_applicationException, ex);
             }
 
-            Log.ApplicationError(_logger, ((IHttpConnectionFeature)this).ConnectionId, TraceIdentifier, ex);
+            Log.ApplicationError(_logger, ((IHttpConnectionFeature)this).ConnectionId, TraceIdentifier!, ex); // TODO: Can TraceIdentifier be null?
         }
 
         public void PostCompletion(NativeMethods.REQUEST_NOTIFICATION_STATUS requestNotificationStatus)

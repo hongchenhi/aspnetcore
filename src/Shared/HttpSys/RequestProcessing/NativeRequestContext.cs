@@ -22,7 +22,7 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
         private IntPtr _originalBufferAddress;
         private bool _useLatin1;
         private HttpApiTypes.HTTP_REQUEST* _nativeRequest;
-        private IMemoryOwner<byte> _backingBuffer;
+        private readonly IMemoryOwner<byte> _backingBuffer;
         private MemoryHandle _memoryHandle;
         private int _bufferAlignment;
         private bool _permanentlyPinned;
@@ -65,6 +65,8 @@ namespace Microsoft.AspNetCore.HttpSys.Internal
             _nativeRequest = request;
             _bufferAlignment = 0;
             _permanentlyPinned = true;
+
+            _backingBuffer = default!; // TODO: Won't
         }
 
         internal HttpApiTypes.HTTP_REQUEST* NativeRequest
