@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using Microsoft.AspNetCore.Http;
 
+// Remove once HttpSys has enabled nullable
+#nullable enable
+
 namespace Microsoft.AspNetCore.HttpSys.Internal
 {
     internal static unsafe class HttpApiTypes
