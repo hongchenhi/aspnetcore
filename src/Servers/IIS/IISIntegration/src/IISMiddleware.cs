@@ -178,7 +178,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration
             // The feature must be removed on a per request basis as the Upgrade feature exists per request.
             if (!_isWebsocketsSupported)
             {
-                httpContext.Features.Set<IHttpUpgradeFeature>(null!); // TODO: Fix Features.Set<T> to allow null
+                httpContext.Features.Set<IHttpUpgradeFeature?>(null);
             }
 
             await _next(httpContext);
